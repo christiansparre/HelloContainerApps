@@ -4,6 +4,8 @@ I needed to know if it was possible to run Orleans on Azure Container Apps. It i
 
 It is a bit rough around the edges, maybe I'll clean it up a bit more later
 
+Currently deployed here: https://spio-hello-aca4-client.orangegrass-26d615b9.northeurope.azurecontainerapps.io/
+
 ## Build the docker images
 
 Build the docker images and push them to a docker registry
