@@ -1,0 +1,20 @@
+version: '3.4'
+
+services:
+  hellocontainerapps.client:
+    image: ${DOCKER_REGISTRY-}hellocontainerappsclient
+    build:
+      context: .
+      dockerfile: HelloContainerApps.Client/Dockerfile
+    depends_on: 
+      - hellocontainerapps.silo
+    env_file:
+      - .env
+
+  hellocontainerapps.silo:
+    image: ${DOCKER_REGISTRY-}hellocontainerappssilo
+    build:
+      context: .
+      dockerfile: HelloContainerApps.Silo/Dockerfile
+    env_file:
+      - .env
