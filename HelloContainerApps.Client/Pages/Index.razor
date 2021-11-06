@@ -1,34 +1,71 @@
 ﻿@page "/"
 @using Orleans
 @using HelloContainerApps.Shared
+@using System.Globalization
 @inject IClusterClient clusterClient
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Hello Azure Container Apps!</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>Hello Azure Container Apps!</h1>
+<div class="mt-4" style="width: 400px;">
+    <label for="name">Enter your name</label>
+    <input type="text" class="form-control mb-2" id="name" @bind="name">
+</div>
+<div>
+    <button type="submit" class="btn btn-primary" @onclick="CallARandomHelloWorldGrain">Say hello</button>
+</div>
 
-Welcome to your new app.
-
-<p>
-    <button class="btn btn-primary" @onclick="CallHelloWorldGrain">Say hello</button>
-</p>
-
-<p>
-    <h2>Hello message from grain</h2>
-    @if (message != null)
-    {
-    <p>@message</p>
-    }
-</p>
+<h3 class="mt-4">Hello responses</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Received</th>
+            <th>Sent</th>
+            <th>Latency</th>
+            <th>Message</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var msg in messages.Take(20))
+        {
+            <tr>
+                <td>@msg.Received.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture)</td>
+                <td>@msg.Sent.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture)</td>
+                <td>@msg.Latency.TotalMilliseconds.ToString("N4") ms</td>
+                <td>@msg.Message</td>
+            </tr>
+        }
+    </tbody>
+</table>
 
 @code {
 
+    private List<MessageInfo> messages = new List<MessageInfo>();
+
+    private string name = "Client McClientFace";
     private string? message;
 
-    private async Task CallHelloWorldGrain()
+    private async Task CallARandomHelloWorldGrain()
     {
         var grain = clusterClient.GetGrain<IHelloWorldGrain>(Guid.NewGuid());
 
-        message = await grain.Hello("Client");
+        var sent = DateTime.Now;
+        message = await grain.Hello(name);
+        messages.Insert(0, new MessageInfo(sent, DateTime.Now, message));
+    }
+
+    public class MessageInfo
+    {
+        public MessageInfo(DateTime sent, DateTime received, string? message)
+        {
+            Sent = sent;
+            Received = received;
+            Message = message;
+        }
+
+        public DateTime Sent { get; }
+        public DateTime Received { get; }
+        public TimeSpan Latency => Received - Sent;
+        public string? Message { get; }
     }
 }

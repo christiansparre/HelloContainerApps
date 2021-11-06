@@ -3,6 +3,7 @@ using HelloContainerApps.Client.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Orleans;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,9 @@ builder.Services
     .AddSingleton<ClusterClientHostedService>()
     .AddSingleton<IHostedService>(_ => _.GetRequiredService<ClusterClientHostedService>())
     .AddSingleton<IClusterClient>(_ => _.GetRequiredService<ClusterClientHostedService>().Client);
+
+builder.Services.AddApplicationInsightsTelemetry();
+builder.Services.AddLogging(options => options.AddApplicationInsights());
 
 var app = builder.Build();
 

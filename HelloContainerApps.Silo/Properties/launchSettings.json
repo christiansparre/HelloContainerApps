@@ -1,10 +1,10 @@
 {
   "profiles": {
     "HelloContainerApps.Silo": {
-      "commandName": "Project"
-    },
-    "Docker (1)": {
-      "commandName": "Docker"
+      "commandName": "Project",
+      "environmentVariables": {
+        "SiloHostName": "localhost"
+      }
     }
   }
 }
