@@ -31,7 +31,8 @@ resource containerApp 'Microsoft.Web/containerApps@2021-03-01' = {
           username: containerRegistryUsername
           passwordSecretRef: 'registry-password'
         }
-      ]      
+      ]
+      activeRevisionsMode: 'Single'
       ingress: {
         external: isExternalIngress
         targetPort: containerPort
@@ -45,6 +46,7 @@ resource containerApp 'Microsoft.Web/containerApps@2021-03-01' = {
           env: environmentVars
         }
       ]
+  
       scale: {
         minReplicas: minReplicas
         maxReplicas: maxReplicas

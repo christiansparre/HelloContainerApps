@@ -6,9 +6,6 @@ param siloImageName string
 param clientImageName string
 
 @secure()
-param orleansAzureStorageConnectionString string
-
-@secure()
 param containerRegistryPassword string
 
 targetScope = 'subscription'
@@ -22,18 +19,27 @@ module containerAppEnvDeploy 'container-app-environment.bicep' = {
   name: 'containerAppEnvDeploy'
   scope: rg
   params: {
-    resourcesBaseName: containerAppBaseName
+    containerAppBaseName: containerAppBaseName
   }
+}
+
+module storageAccountDeploy 'container-app-storage-account.bicep' = {
+  name: 'storageAccountDeploy'
+  scope: rg
 }
 
 var envVars = [
   {
     'name': 'AzureStorageConnectionString'
-    'value': orleansAzureStorageConnectionString
+    'value': storageAccountDeploy.outputs.storageConnectionString
   }
   {
     'name': 'AzureStorageTableName'
     'value': 'orleanscluster${uniqueString(rg.id)}'
+  }
+  {
+    'name': 'APPINSIGHTS_INSTRUMENTATIONKEY'
+    'value': containerAppEnvDeploy.outputs.appInsightsInstrumentationKey
   }
 ]
 
@@ -65,6 +71,7 @@ module clientContainerAppDeploy 'container-app-client.bicep' = {
     containerAppName: '${containerAppBaseName}-client'
     isExternalIngress: true
     containerPort: 80
-    minReplicas: 0    
+    minReplicas: 1
+    maxReplicas: 1
   }
 }
