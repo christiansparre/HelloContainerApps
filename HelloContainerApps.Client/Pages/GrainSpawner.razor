@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/grain-spawner"
 @using Orleans
 @using HelloContainerApps.Shared
 @using System.Globalization
@@ -8,11 +8,11 @@
 
 <h1>Hello Azure Container Apps!</h1>
 <div class="mt-4" style="width: 400px;">
-    <label for="count">Enter your name</label>
-    <input type="text" class="form-control mb-2" id="count" @bind="name">
+    <label for="count">Grain count</label>
+    <input type="number" class="form-control mb-2" id="count" @bind="count">
 </div>
 <div>
-    <button type="submit" class="btn btn-primary" @onclick="CallARandomHelloWorldGrain">Say hello</button>
+    <button type="submit" class="btn btn-primary" @onclick="CallMultipleGrainsMultipleTimes">Spawn some grains!</button>
 </div>
 
 <h3 class="mt-4">Hello responses</h3>
@@ -42,16 +42,28 @@
 
     private List<MessageInfo> messages = new List<MessageInfo>();
 
-    private string name = "Client McClientFace";
+    private int count = 20;
     private string? message;
 
-    private async Task CallARandomHelloWorldGrain()
+    private async Task CallMultipleGrainsMultipleTimes()
     {
-        var grain = clusterClient.GetGrain<IHelloWorldGrain>(Guid.NewGuid());
+        var grains = Enumerable.Range(1, count).Select(s => new { n = s, grain = clusterClient.GetGrain<IHelloWorldGrain>(Guid.NewGuid()) }).ToArray();
 
-        var sent = DateTime.Now;
-        message = await grain.Hello(name);
-        messages.Insert(0, new MessageInfo(sent, DateTime.Now, message));
+
+        var s1 = DateTime.Now;
+        var tasks1 = grains.Select(s => s.grain.Hello($"Name nameson {s.n}")).ToArray();
+        await Task.WhenAll(tasks1);
+        var e1 = DateTime.Now;
+
+        messages.Insert(0, new MessageInfo(s1, e1, $"Spawned and called {count} grains"));
+        
+        var s2 = DateTime.Now;
+        var tasks2 = grains.Select(s => s.grain.Hello($"Name nameson {s.n}")).ToArray();
+        await Task.WhenAll(tasks2);
+        var e2 = DateTime.Now;
+        
+        messages.Insert(0, new MessageInfo(s2, e2, $"Called the {count} grains again"));
+
     }
 
     public class MessageInfo
