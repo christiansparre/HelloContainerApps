@@ -1,6 +1,8 @@
+param location string = resourceGroup().location
+
 resource storageAccount 'Microsoft.Storage/storageAccounts@2021-06-01' = {
   name: 'helloaca${uniqueString(resourceGroup().id)}'
-  location: resourceGroup().location
+  location: location
   kind: 'StorageV2'
   sku: {
     name: 'Standard_LRS'

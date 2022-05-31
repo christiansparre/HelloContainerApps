@@ -4,6 +4,7 @@ param environmentVars array = []
 param containerAppBaseName string
 param siloImageName string
 param clientImageName string
+param location string = deployment().location
 
 @secure()
 param containerRegistryPassword string
@@ -12,7 +13,7 @@ targetScope = 'subscription'
 
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: '${containerAppBaseName}-rg'
-  location: deployment().location
+  location: location
 }
 
 module containerAppEnvDeploy 'container-app-environment.bicep' = {
@@ -20,12 +21,16 @@ module containerAppEnvDeploy 'container-app-environment.bicep' = {
   scope: rg
   params: {
     containerAppBaseName: containerAppBaseName
+    location: location
   }
 }
 
 module storageAccountDeploy 'container-app-storage-account.bicep' = {
   name: 'storageAccountDeploy'
   scope: rg
+  params: {
+    location: location
+  }
 }
 
 var envVars = [
@@ -55,6 +60,7 @@ module siloContainerAppDeploy 'container-app-silo.bicep' = {
     environmentVars: union(environmentVars, envVars)
     containerAppName: '${containerAppBaseName}-silo'
     minReplicas: 3
+    location: location
   }
 }
 
@@ -73,5 +79,6 @@ module clientContainerAppDeploy 'container-app-client.bicep' = {
     containerPort: 80
     minReplicas: 1
     maxReplicas: 1
+    location: location
   }
 }

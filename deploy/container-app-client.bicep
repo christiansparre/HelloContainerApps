@@ -8,16 +8,16 @@ param containerRegistryUsername string
 param minReplicas int = 0
 param maxReplicas int = 10
 param environmentVars array = []
+param location string = resourceGroup().location
 
 @secure()
 param containerRegistryPassword string
 
-resource containerApp 'Microsoft.Web/containerApps@2021-03-01' = {
+resource containerApp 'Microsoft.App/containerApps@2022-01-01-preview' = {
   name: containerAppName
-  kind: 'containerapp'
-  location: resourceGroup().location
+  location: location
   properties: {
-    kubeEnvironmentId: environmentId
+    managedEnvironmentId: environmentId
     configuration: {
       secrets: [
         {
@@ -32,7 +32,7 @@ resource containerApp 'Microsoft.Web/containerApps@2021-03-01' = {
           passwordSecretRef: 'registry-password'
         }
       ]
-      activeRevisionsMode: 'Single'
+      activeRevisionsMode: 'single'
       ingress: {
         external: isExternalIngress
         targetPort: containerPort

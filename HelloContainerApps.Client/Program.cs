@@ -1,22 +1,32 @@
 using HelloContainerApps.Client.Data;
-using HelloContainerApps.Client.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Orleans;
+using Orleans.Configuration;
+using Orleans.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseOrleansClient(clientBuilder =>
+{
+    clientBuilder.UseAzureStorageClustering(options =>
+        {
+            options.ConfigureTableServiceClient(builder.Configuration["AzureStorageConnectionString"]);
+            options.TableName = builder.Configuration["AzureStorageTableName"];
+        })
+        .Configure<ClusterOptions>(options =>
+        {
+            options.ClusterId = "HelloWorld";
+            options.ServiceId = "HelloWorld";
+        });
+});
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
-
-builder.Services
-    .AddSingleton<ClusterClientHostedService>()
-    .AddSingleton<IHostedService>(_ => _.GetRequiredService<ClusterClientHostedService>())
-    .AddSingleton<IClusterClient>(_ => _.GetRequiredService<ClusterClientHostedService>().Client);
 
 builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddLogging(options => options.AddApplicationInsights());

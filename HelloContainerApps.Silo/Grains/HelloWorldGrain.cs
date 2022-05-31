@@ -6,6 +6,7 @@ using Orleans;
 
 namespace HelloContainerApps.Silo.Grains
 {
+    [CollectionAgeLimit(Minutes = 5)]
     public class HelloWorldGrain : Grain, IHelloWorldGrain
     {
         private readonly ILogger<HelloWorldGrain> _logger;
@@ -22,3 +23,4 @@ namespace HelloContainerApps.Silo.Grains
         }
     }
 }
+    

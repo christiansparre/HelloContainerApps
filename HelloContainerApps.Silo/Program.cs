@@ -1,32 +1,34 @@
 using System.Net;
-using HelloContainerApps.Silo.Grains;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Orleans;
 using Orleans.Configuration;
 using Orleans.Hosting;
 
-var host = Host.CreateDefaultBuilder(args)
-    .UseOrleans((ctx, siloBuilder) =>
-        siloBuilder
-        .UseAzureStorageClustering(options =>
-        {
-            options.ConnectionString = ctx.Configuration["AzureStorageConnectionString"];
-            options.TableName = ctx.Configuration["AzureStorageTableName"];
-        })
-        .Configure<ClusterOptions>(options =>
-        {
-            options.ClusterId = "HelloWorld";
-            options.ServiceId = "HelloWorld";
-        })
-        .ConfigureEndpoints(ctx.Configuration["SiloHostName"] ?? Dns.GetHostName(), ctx.Configuration.GetValue<int>("SiloPort"), ctx.Configuration.GetValue<int>("GatewayPort"))
-        .ConfigureApplicationParts(parts => parts.AddApplicationPart(typeof(HelloWorldGrain).Assembly).WithReferences())
-        .ConfigureLogging(loggingBuilder =>
-        {
-            loggingBuilder.AddApplicationInsights();
-        }))
-    .ConfigureServices(services => { })
-    .Build();
+var builder = WebApplication.CreateBuilder(args);
 
-await host.RunAsync();
+builder.Host
+    .UseOrleans(silo =>
+    {
+        silo
+            .UseAzureStorageClustering(options =>
+            {
+                options.ConfigureTableServiceClient(builder.Configuration["AzureStorageConnectionString"]);
+                options.TableName = builder.Configuration["AzureStorageTableName"];
+            })
+            .Configure<ClusterOptions>(options =>
+            {
+                options.ClusterId = "HelloWorld";
+                options.ServiceId = "HelloWorld";
+            })
+            .ConfigureEndpoints(builder.Configuration["SiloHostName"] ?? Dns.GetHostName(), builder.Configuration.GetValue<int>("SiloPort"), builder.Configuration.GetValue<int>("GatewayPort"))
+            .ConfigureLogging(loggingBuilder => { loggingBuilder.AddApplicationInsights(); });
+    });
+
+var app = builder.Build();
+
+app.MapGet("/", context => context.Response.WriteAsync("Hello World"));
+
+app.Run();

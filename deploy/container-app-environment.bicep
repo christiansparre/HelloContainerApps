@@ -1,8 +1,9 @@
 param containerAppBaseName string
+param location string = resourceGroup().location
 
 resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2020-03-01-preview' = {
   name: '${containerAppBaseName}-logs'
-  location: resourceGroup().location
+  location: location
   properties: any({
     retentionInDays: 30
     features: {
@@ -16,7 +17,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2020-03
 
 resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   name: '${containerAppBaseName}-appinsights'
-  location: resourceGroup().location
+  location: location
   kind: 'web'
   properties: {
     Application_Type: 'web'
@@ -26,13 +27,10 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource containerAppEnv 'Microsoft.Web/kubeEnvironments@2021-02-01' = {
+resource containerAppEnv 'Microsoft.App/managedEnvironments@2022-01-01-preview' = {
   name: '${containerAppBaseName}-env'
-  location: resourceGroup().location
-  kind: 'containerenvironment'
+  location: location
   properties: {
-    type: 'managed'
-    internalLoadBalancerEnabled: false
     appLogsConfiguration: {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
@@ -42,6 +40,7 @@ resource containerAppEnv 'Microsoft.Web/kubeEnvironments@2021-02-01' = {
     }
   }
 }
+
 
 output environmentId string = containerAppEnv.id
 output appInsightsInstrumentationKey string = appInsights.properties.InstrumentationKey
